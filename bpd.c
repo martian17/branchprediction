@@ -2,30 +2,31 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-bool* bpinit(int n,int* _mask){//n bits
-    int size = (1<<n);
-    bool* states = malloc(sizeof(bool)*size);//size one
+int* bpinit(int hist_len, int cnt_len){
+    int size = (1<<hist_len);
+    int* states = malloc(sizeof(int)*size);//size one
+    
     //to every possible immediate past history
-    int mask = 0;
-    for(int i = 0; i < n; i++){//initializing the mask and the states
-        mask = mask<<1;
-        mask |= 1;
-        states[i] = false;
+    for(int i = 0; i < hist_len; i++){//initializing the states
+        states[i] = 1<<(cnt_len-1);
     }
-    *_mask = mask;
     return states;
 }
 
 int main(){
-    int mask;
-    bool* table = bpinit(3,&mask);
-    int state = 0;
-    char input;
+    int hist_len = 2;
+    int cnt_len = 2;
+    int hist_mask = (1<<hist_len)-1;
+    int cnt_mask = (1<<cnt_len)-1;
+    int* table = bpinit(hist_len,cnt_len);
+    int history = 0;
     int cnt = 0;
     int cntr = 0;
+    char input;
     while(true){
         cnt++;
-        printf("Predicted result: %s\n",table[state]?"t":"f");
+        bool prediction = (bool)((table[history]>>(cnt_len-1))&1);
+        printf("Predicted result: %s\n",prediction?"t":"f");
         printf("make your decision: ");
         scanf(" %c",&input);
         bool _input;
@@ -37,15 +38,23 @@ int main(){
             printf("Invalid input %c\n",input);
             continue;
         }
-        if(_input == table[state]){
+        if(_input == prediction){
             cntr++;
             printf("\033[F\n\e[42mPrediction Success :D!\e[0m\n");
         }else{
             printf("\033[F\n\e[41mPrediction Failed D:\e[0m\n");
         }
         printf("Prediction accuracy: %d%%\n",cntr*100/cnt);
-        //printf("%d\n",state);
-        table[state] = _input;
-        state = ((state<<1)|(_input?1:0))&mask;
+        printf("%d\n",history);
+        printf("%d\n",table[history]);
+        int counter = table[history];
+        counter += _input?1:-1;
+        if(counter < 0){
+            counter = 0;
+        }else if(counter > cnt_mask){
+            counter = cnt_mask;
+        }
+        table[history] = counter;//write back
+        history = ((history<<1)|(_input?1:0))&hist_mask;
     }
 }
