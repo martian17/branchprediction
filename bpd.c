@@ -18,7 +18,7 @@ bool* bpinit(int n,int* _mask){//n bits
 
 int main(){
     int mask;
-    bool* table = bpinit(5,&mask);
+    bool* table = bpinit(3,&mask);
     int state = 0;
     char input;
     int cnt = 0;
